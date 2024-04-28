@@ -540,6 +540,42 @@ local function pairsByQuality(bagCache)
 	
 end
 
+local function pairsByQualityAndQuantity(bagCache)
+	local arraySorted = {}
+	-- we can't sort by 2 values at the same time, so we use a helper-array
+	local arrayQuality = {}
+	-- initialise one sub-array for every quality
+	for i = 1, 5 do
+		arrayQuality[i] = {}
+	end
+
+	-- throw bag slots into respective quality array
+	for key, data in pairs(bagCache) do
+		table.insert(arrayQuality[data.quality], data)
+	end
+
+	local function sortByPosition(a, b)
+		-- ascending sort, sell smallest stacks first to free up bag space
+		return a.stackCount < b.stackCount
+	end
+
+	-- sort by quantity within each quality
+	for i = 1, 5 do
+		table.sort(arrayQuality[i], sortByPosition)
+	end
+
+	-- join arrays back together to be usable once returned
+	for i = #arrayQuality, 1, -1 do
+		for key, data in pairs(arrayQuality[i]) do
+			-- d("quality: "..data.quality.." ; stackCount: "..data.stackCount.." ; rawName: "..data.rawName)
+			table.insert(arraySorted, data)
+		  end
+	end
+
+	return arraySorted
+
+end
+
 local function SellJunkItems(isFence)
 	
 	if GetInteractionType() == INTERACTION_VENDOR then
@@ -555,10 +591,11 @@ local function SellJunkItems(isFence)
 		if isFence then
 			hagglingBonus = GetNonCombatBonus(NON_COMBAT_BONUS_HAGGLING)
 			hasHagglingBonus = hagglingBonus > 0
-			bagCache = pairsByQuality(bagCache)
+			bagCache = pairsByQualityAndQuantity(bagCache)
 		end
 		
 		for slotId, data in pairs(bagCache) do
+			-- d("quality: "..data.quality.." ; stackCount: "..data.stackCount.." ; rawName: "..data.rawName)
 			if transactions < 50 then
 				if data.isJunk then
 					if data.stolen == isFence then
