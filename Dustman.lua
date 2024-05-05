@@ -859,7 +859,10 @@ local function OnInventorySingleSlotUpdate(_, bagId, slotId, isNewItem)
 	-- Stolen item to do not launder, not in the main block because it must be re-evaluated.
 	if IsItemLinkStolen(itemLink) then
 		if itemType ~= ITEMTYPE_TREASURE then
-			if (Dustman.GetSettings().excludeLaunder[itemType] and quality <= ITEM_QUALITY_NORMAL and (itemType ~= ITEMTYPE_STYLE_MATERIAL or (itemType == ITEMTYPE_STYLE_MATERIAL and Dustman.GetSettings().styleMaterial[itemId] ~= nil))) or (itemType == ITEMTYPE_RECIPE and quality <= Dustman.GetSettings().stolenRecipeQuality) then
+			if Dustman.GetSettings().excludeLaunder[itemType] and (
+				(quality <= ITEM_QUALITY_NORMAL and (itemType ~= ITEMTYPE_STYLE_MATERIAL or (itemType == ITEMTYPE_STYLE_MATERIAL and Dustman.GetSettings().styleMaterial[itemId] ~= nil)))
+				  or (itemType == ITEMTYPE_RECIPE and IsItemLinkRecipeKnown(itemLink) and quality <= Dustman.GetSettings().stolenRecipeQuality)
+			) then
 				if Dustman.GetSettings().destroyNonLaundered then
 					HandleJunk(bagId, slotId, itemLink, sellPrice, true, "FENCE-TO-DESTROY") -- Will destroy the item directly
 					return
