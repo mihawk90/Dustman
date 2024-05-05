@@ -549,9 +549,16 @@ local function pairsByQualityAndQuantity(bagCache)
 		arrayQuality[i] = {}
 	end
 
+	-- Trash (0) items break the table.insert below and LUA tables can't be 0-indexed, so we put them into 9 as a run-around
+	arrayQuality[9] = {}
+
 	-- throw bag slots into respective quality array
 	for key, data in pairs(bagCache) do
-		table.insert(arrayQuality[data.quality], data)
+		if data.quality == 0 then
+			table.insert(arrayQuality[9], data)
+		else
+			table.insert(arrayQuality[data.quality], data)
+		end
 	end
 
 	local function sortByPosition(a, b)
@@ -565,11 +572,16 @@ local function pairsByQualityAndQuantity(bagCache)
 	end
 
 	-- join arrays back together to be usable once returned
-	for i = #arrayQuality, 1, -1 do
+	for i = 5, 1, -1 do
 		for key, data in pairs(arrayQuality[i]) do
 			-- d("quality: "..data.quality.." ; stackCount: "..data.stackCount.." ; rawName: "..data.rawName)
 			table.insert(arraySorted, data)
-		  end
+		end
+	end
+
+	-- attach Trash (0) items we put into 9 above
+	for key, data in pairs(arrayQuality[9]) do
+		table.insert(arraySorted, data)
 	end
 
 	return arraySorted
